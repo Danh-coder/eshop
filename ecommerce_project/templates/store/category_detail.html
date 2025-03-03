@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} - E-Shop{% endblock %}
+
+{% block content %}
+<h1>{{ category.name }}</h1>
+<hr>
+
+<div class="row">
+    {% for product in products %}
+        <div class="col-md-3 mb-4">
+            <div class="card h-100">
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-muted">${{ product.price }}</p>
+                    <p class="card-text small">{{ product.description|truncatechars:100 }}</p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="{% url 'product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-sm btn-primary">Add to Cart</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No products available in this category.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

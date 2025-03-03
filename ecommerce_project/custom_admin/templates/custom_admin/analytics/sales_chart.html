@@ -1,0 +1,331 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Sales Analytics - E-Shop Admin{% endblock %}
+
+{% block page_title %}Sales Analytics{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Sales Trends</h6>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary period-selector active" data-period="daily">Daily</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary period-selector" data-period="weekly">Weekly</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary period-selector" data-period="monthly">Monthly</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-area" style="height: 400px;">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Monthly Sales Comparison</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-bar" style="height: 300px;">
+                    <canvas id="monthlySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Sales by Category</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-pie" style="height: 300px;">
+                    <canvas id="categorySalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Sales Growth</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area" style="height: 300px;">
+                    <canvas id="salesGrowthChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPeriod = 'daily';
+    let salesTrendChart;
+    
+    // Initialize charts
+    loadSalesTrendChart(currentPeriod);
+    loadMonthlySalesChart();
+    loadCategorySalesChart();
+    loadSalesGrowthChart();
+    
+    // Period selector for sales trend chart
+    document.querySelectorAll('.period-selector').forEach(item => {
+        item.addEventListener('click', event => {
+            document.querySelectorAll('.period-selector').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            currentPeriod = event.target.dataset.period;
+            loadSalesTrendChart(currentPeriod);
+        });
+    });
+    
+    function loadSalesTrendChart(period) {
+        fetch(`/custom-admin/analytics/api/chart-data/?type=sales&period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('salesTrendChart').getContext('2d');
+                
+                // Destroy previous chart if exists
+                if (salesTrendChart) {
+                    salesTrendChart.destroy();
+                }
+                
+                salesTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            label: 'Sales ($)',
+                            data: data.values,
+                            backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                            borderColor: 'rgba(78, 115, 223, 1)',
+                            pointRadius: 3,
+                            pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                            pointBorderColor: 'rgba(78, 115, 223, 1)',
+                            pointHoverRadius: 3,
+                            pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
+                            pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
+                            pointHitRadius: 10,
+                            pointBorderWidth: 2,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return '$' + context.raw.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+    
+    // For demo purposes - these would use real data in production
+    function loadMonthlySalesChart() {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const thisYear = Array.from({length: 12}, () => Math.floor(Math.random() * 50000) + 10000);
+        const lastYear = Array.from({length: 12}, () => Math.floor(Math.random() * 40000) + 8000);
+        
+        const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: '2025',
+                        data: thisYear,
+                        backgroundColor: 'rgba(78, 115, 223, 0.8)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '2024',
+                        data: lastYear,
+                        backgroundColor: 'rgba(54, 185, 204, 0.8)',
+                        borderColor: 'rgba(54, 185, 204, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': $' + context.raw.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function loadCategorySalesChart() {
+        fetch('/custom-admin/analytics/api/chart-data/?type=categories')
+            .then(response => response.json())
+            .then(data => {
+                // Generate random sales data for each category
+                const salesData = data.labels.map(() => Math.floor(Math.random() * 50000) + 10000);
+                
+                const ctx = document.getElementById('categorySalesChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: salesData,
+                            backgroundColor: [
+                                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                                '#5a5c69', '#858796', '#6f42c1', '#20c9a6', '#e83e8c'
+                            ]
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': $' + context.raw.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+    
+    function loadSalesGrowthChart() {
+        // Generate demo data for sales growth
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const baseValues = [20000, 22000, 25000, 23000, 28000, 30000, 32000, 35000, 38000, 40000, 42000, 45000];
+        const growthRate = baseValues.map((val, i) => {
+            if (i === 0) return 0;
+            return ((val - baseValues[i-1]) / baseValues[i-1] * 100).toFixed(1);
+        });
+        
+        const ctx = document.getElementById('salesGrowthChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [
+                    {
+                        label: 'Sales ($)',
+                        data: baseValues,
+                        backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        yAxisID: 'y',
+                        type: 'line',
+                        order: 1
+                    },
+                    {
+                        label: 'Growth (%)',
+                        data: growthRate,
+                        backgroundColor: 'rgba(28, 200, 138, 0.8)',
+                        borderColor: 'rgba(28, 200, 138, 1)',
+                        yAxisID: 'y1',
+                        type: 'bar',
+                        order: 2
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Sales ($)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Growth (%)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label === 'Sales ($)') {
+                                    return 'Sales: $' + context.raw.toLocaleString();
+                                } else {
+                                    return 'Growth: ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

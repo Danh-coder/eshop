@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Products - E-Shop{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Products</h1>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'product_list' %}">
+                    <div class="mb-3">
+                        <label for="search" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="search" name="search" value="{{ request.GET.search|default:'' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <div class="list-group">
+                            <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not request.GET.category %}active{% endif %}">
+                                All Categories
+                            </a>
+                            {% for category in categories %}
+                                <a href="{% url 'product_list' %}?category={{ category.slug }}" 
+                                   class="list-group-item list-group-item-action {% if request.GET.category == category.slug %}active{% endif %}">
+                                    {{ category.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sort" class="form-label">Sort By</label>
+                        <select class="form-select" id="sort" name="sort" onchange="this.form.submit()">
+                            <option value="" {% if not request.GET.sort %}selected{% endif %}>Default</option>
+                            <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest First</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">Clear Filters</a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="row">
+            {% for product in products %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product.name }}</h5>
+                            <p class="card-text text-muted">${{ product.price }}</p>
+                            <p class="card-text small">{{ product.description|truncatechars:100 }}</p>
+                        </div>
+                        <div class="card-footer bg-white border-top-0">
+                            <a href="{% url 'product_detail' product.slug %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                            <a href="{% url 'add_to_cart' product.id %}" class="btn btn-sm btn-primary">Add to Cart</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No products found matching your criteria.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
