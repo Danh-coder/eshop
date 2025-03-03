@@ -135,7 +135,7 @@ The project includes several customizable settings in `settings.py`:
 - `PRODUCTS_PER_PAGE`: Number of products to display per page
 - `ORDERS_PER_PAGE`: Number of orders to display per page
 
-### Environment Variables
+### Environment Variables (Optional)
 Create a `.env` file with the following variables:
 
 ```
